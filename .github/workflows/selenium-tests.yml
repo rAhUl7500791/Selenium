@@ -27,27 +27,19 @@ on:
           - edge
 
 jobs:
-  # Define variables that are always available, falling back to defaults for push/PR events
-  # This makes the job 'if' conditions work universally.
-  set_vars:
-    runs-on: ubuntu-latest
-    outputs:
-      suite: ${{ github.event.inputs.suite || 'all' }}
-      browser: ${{ github.event.inputs.browser || 'chrome' }}
-    steps:
-      - run: echo "Running suite: ${{ github.event.inputs.suite || 'all' }}"
-      - run: echo "Running browser: ${{ github.event.inputs.browser || 'chrome' }}"
-
+  # Define input variables with defaults for easier access (using `|| 'default'`)
+  # If the workflow runs on push/PR, inputs are null, and the defaults 'all'/'chrome' are used.
+  
   # --- JOB 1: RUN SMOKE TESTS ---
   smoke_test:
-    name: Run Smoke Tests on ${{ needs.set_vars.outputs.browser }}
+    name: Run Smoke Tests on ${{ github.event.inputs.browser || 'chrome' }}
     runs-on: ubuntu-latest
-    needs: set_vars # Get the computed variables
     env:
       CI: true
     
-    # Use the computed output variable from set_vars
-    if: needs.set_vars.outputs.suite == 'smoke' || needs.set_vars.outputs.suite == 'all'
+    # CRITICAL IF: Job runs if suite input is 'smoke' or 'all', or defaults to 'all' on push/PR.
+    ${{ vars.current_suite := github.event.inputs.suite || 'all' }}
+    if: vars.current_suite == 'smoke' || vars.current_suite == 'all'
     
     steps:
       - name: Checkout repository
@@ -62,27 +54,25 @@ jobs:
 
       - name: Run Smoke Tests 💨
         run: |
-          BROWSER="${{ needs.set_vars.outputs.browser }}"
+          BROWSER="${{ github.event.inputs.browser || 'chrome' }}"
           echo "Running smoke tests on $BROWSER"
           mvn clean test -Dgroups=smoke -Dbrowser="$BROWSER"
         shell: bash
 
   # --- JOB 2: RUN REGRESSION TESTS (CONDITIONAL DEPENDENCY) ---
   regression_test:
-    name: Run Regression Tests on ${{ needs.set_vars.outputs.browser }}
+    name: Run Regression Tests on ${{ github.event.inputs.browser || 'chrome' }}
     runs-on: ubuntu-latest
-    needs: [smoke_test, set_vars] # Depend on both the result and the variables
-    env:
-      CI: true
     
-    # Get computed suite from set_vars job:
-    ${{ vars.suite := needs.set_vars.outputs.suite }} 
-
-    # CRITICAL CONDITION: This job runs only IF:
-    # a) Regression was requested ('regression' or 'all').
-    # b) The result of the 'smoke_test' was 'success' OR 'skipped'. (It didn't fail)
+    # Dependency on smoke_test.
+    needs: smoke_test
+    
+    # CRITICAL IF: This job runs only IF:
+    # 1. Regression was requested ('regression' or 'all', or defaults to 'all').
+    # 2. The result of the 'smoke_test' was 'success' OR 'skipped'. (It did not fail)
+    ${{ vars.current_suite := github.event.inputs.suite || 'all' }}
     if: |
-      (vars.suite == 'regression' || vars.suite == 'all') && 
+      (vars.current_suite == 'regression' || vars.current_suite == 'all') && 
       (needs.smoke_test.result == 'success' || needs.smoke_test.result == 'skipped') && 
       !cancelled()
 
@@ -99,7 +89,7 @@ jobs:
 
       - name: Run Regression Tests 🐢
         run: |
-          BROWSER="${{ needs.set_vars.outputs.browser }}"
+          BROWSER="${{ github.event.inputs.browser || 'chrome' }}"
           echo "Running regression tests on $BROWSER"
           mvn clean test -Dgroups=regression -Dbrowser="$BROWSER"
         shell: bash
@@ -107,6 +97,6 @@ jobs:
       - name: Upload Test Reports
         uses: actions/upload-artifact@v4
         with:
-          name: regression-report-${{ needs.set_vars.outputs.browser }}
+          name: regression-report-${{ github.event.inputs.browser || 'chrome' }}
           path: target/surefire-reports
           retention-days: 7
