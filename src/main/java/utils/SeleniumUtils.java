@@ -6,6 +6,7 @@ import java.time.Duration;
 
 import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
@@ -27,7 +28,10 @@ public class SeleniumUtils {
     public void waitForElementClickable(By locator) {
         wait.until(ExpectedConditions.elementToBeClickable(locator));
     }
-    
+    public void scrollIntoView(WebElement element) {
+        JavascriptExecutor executor = (JavascriptExecutor) driver;
+        executor.executeScript("arguments[0].scrollIntoView({block: 'center'});", element);
+    }
     public void waitForElementVisible(WebElement element) {
         wait.until(ExpectedConditions.visibilityOf(element));
     }
@@ -44,4 +48,6 @@ public class SeleniumUtils {
         FileUtils.copyFile(source, new File(destinationFile));
         return destinationFile;
     }
+
+
 }
