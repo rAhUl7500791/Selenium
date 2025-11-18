@@ -55,12 +55,12 @@ jobs:
 
 
   regression:
-    needs: smoke         # 🚀 Runs only if SMOKE passes
+    needs: smoke
     runs-on: ubuntu-latest
     if: |
       github.event.inputs.suite == 'all' ||
       github.event.inputs.suite == 'regression' ||
-      github.event_name != 'workflow_dispatch'    # For push/PR always run
+      github.event_name != 'workflow_dispatch'
 
     steps:
 
