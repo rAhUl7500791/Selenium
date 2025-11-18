@@ -48,22 +48,15 @@ jobs:
         run: |
           BROWSER="${{ github.event.inputs.browser || 'chrome' }}"
           echo "Running smoke tests on $BROWSER"
-          mvn clean test -Dgroups=smoke -Dbrowser="$BROWSER" -Dsurefire.useFile=false
+          mvn clean test -Dgroups=smoke -Dbrowser="$BROWSER"
         shell: bash
 
-      - name: Generate Allure Report for Smoke
-        if: always()
-        uses: qa-research/allure-report-action@v2
-        with:
-          results: target/allure-results
-          report: target/allure-report-smoke
-
-      - name: Upload Smoke Allure HTML Report
-        if: always()
+      - name: Upload Smoke Test Reports
+        if: always()   # <-- ensures reports upload even if tests fail
         uses: actions/upload-artifact@v4
         with:
-          name: smoke-allure-report-${{ github.event.inputs.browser || 'chrome' }}
-          path: target/allure-report-smoke
+          name: smoke-report-${{ github.event.inputs.browser || 'chrome' }}
+          path: target/surefire-reports
           retention-days: 7
 
   # --- JOB 2: REGRESSION TEST ---
@@ -88,20 +81,13 @@ jobs:
         run: |
           BROWSER="${{ github.event.inputs.browser || 'chrome' }}"
           echo "Running regression tests on $BROWSER"
-          mvn clean test -Dgroups=regression -Dbrowser="$BROWSER" -Dsurefire.useFile=false
+          mvn clean test -Dgroups=regression -Dbrowser="$BROWSER"
         shell: bash
 
-      - name: Generate Allure Report for Regression
-        if: always()
-        uses: qa-research/allure-report-action@v2
-        with:
-          results: target/allure-results
-          report: target/allure-report-regression
-
-      - name: Upload Regression Allure HTML Report
-        if: always()
+      - name: Upload Regression Test Reports
+        if: always()   # <-- ensures reports upload even if tests fail
         uses: actions/upload-artifact@v4
         with:
-          name: regression-allure-report-${{ github.event.inputs.browser || 'chrome' }}
-          path: target/allure-report-regression
+          name: regression-report-${{ github.event.inputs.browser || 'chrome' }}
+          path: target/surefire-reports
           retention-days: 7
