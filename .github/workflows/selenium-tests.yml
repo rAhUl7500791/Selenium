@@ -27,20 +27,16 @@ on:
           - edge
 
 jobs:
-  # Define input variables with defaults for easier access (using `|| 'default'`)
-  # If the workflow runs on push/PR, inputs are null, and the defaults 'all'/'chrome' are used.
-  
-  # --- JOB 1: RUN SMOKE TESTS ---
+  # --- JOB 1: SMOKE TEST ---
   smoke_test:
     name: Run Smoke Tests on ${{ github.event.inputs.browser || 'chrome' }}
     runs-on: ubuntu-latest
     env:
       CI: true
-    
-    # CRITICAL IF: Job runs if suite input is 'smoke' or 'all', or defaults to 'all' on push/PR.
-    ${{ vars.current_suite := github.event.inputs.suite || 'all' }}
-    if: vars.current_suite == 'smoke' || vars.current_suite == 'all'
-    
+      SUITE: ${{ github.event.inputs.suite || 'all' }}
+      BROWSER: ${{ github.event.inputs.browser || 'chrome' }}
+    if: ${{ env.SUITE == 'smoke' || env.SUITE == 'all' }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -54,32 +50,31 @@ jobs:
 
       - name: Run Smoke Tests 💨
         run: |
-          BROWSER="${{ github.event.inputs.browser || 'chrome' }}"
           echo "Running smoke tests on $BROWSER"
           mvn clean test -Dgroups=smoke -Dbrowser="$BROWSER"
         shell: bash
 
-  # --- JOB 2: RUN REGRESSION TESTS (CONDITIONAL DEPENDENCY) ---
+      - name: Upload Smoke Test Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-report-$BROWSER
+          path: target/surefire-reports
+          retention-days: 7
+
+  # --- JOB 2: REGRESSION TEST ---
   regression_test:
     name: Run Regression Tests on ${{ github.event.inputs.browser || 'chrome' }}
     runs-on: ubuntu-latest
-    
-    # Dependency on smoke_test.
     needs: smoke_test
-    
-    # CRITICAL IF: This job runs only IF:
-    # 1. Regression was requested ('regression' or 'all', or defaults to 'all').
-    # 2. The result of the 'smoke_test' was 'success' OR 'skipped'. (It did not fail)
-    ${{ vars.current_suite := github.event.inputs.suite || 'all' }}
-    if: |
-      (vars.current_suite == 'regression' || vars.current_suite == 'all') && 
-      (needs.smoke_test.result == 'success' || needs.smoke_test.result == 'skipped') && 
-      !cancelled()
+    env:
+      SUITE: ${{ github.event.inputs.suite || 'all' }}
+      BROWSER: ${{ github.event.inputs.browser || 'chrome' }}
+    if: ${{ (env.SUITE == 'regression' || env.SUITE == 'all') && (needs.smoke_test.result == 'success' || needs.smoke_test.result == 'skipped') }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -89,14 +84,13 @@ jobs:
 
       - name: Run Regression Tests 🐢
         run: |
-          BROWSER="${{ github.event.inputs.browser || 'chrome' }}"
           echo "Running regression tests on $BROWSER"
           mvn clean test -Dgroups=regression -Dbrowser="$BROWSER"
         shell: bash
-        
-      - name: Upload Test Reports
+
+      - name: Upload Regression Test Reports
         uses: actions/upload-artifact@v4
         with:
-          name: regression-report-${{ github.event.inputs.browser || 'chrome' }}
+          name: regression-report-$BROWSER
           path: target/surefire-reports
           retention-days: 7
