@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<suite name="E2E Automation Framework" parallel="tests" thread-count="2">
+
+    <listeners>
+        <listener class-name="listeners.TestListener" />
+          <listener class-name="listeners.RetryTransformer"/>
+       </listeners>
+    <test name="Smoke Suite">
+        <groups>
+            <run>
+                <include name="smoke"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.SmokeTest"/>
+        </classes>
+    </test>
+
+  
+    <test name="Regression Suite">
+        <groups>
+            <run>
+                <include name="regression"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="tests.RegressionTest"/>
+        </classes>
+    </test>
+
+</suite>
