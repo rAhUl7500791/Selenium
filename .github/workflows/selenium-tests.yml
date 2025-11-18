@@ -28,48 +28,16 @@ on:
 
 jobs:
 
-  # --- JOB 1: RUN SMOKE TESTS FIRST (MUST PASS) ---
+  # --- JOB 1: RUN SMOKE TESTS ---
   smoke_test:
     name: Run Smoke Tests on ${{ github.event.inputs.browser }}
     runs-on: ubuntu-latest
     env:
       CI: true
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: 'maven'
-
-      - name: Run Smoke Tests
-        run: |
-          BROWSER="${{ github.event.inputs.browser }}"
-          echo "Running smoke tests on $BROWSER"
-          # Always run smoke tests in this job, regardless of the input,
-          # unless the input is explicitly 'regression'
-          if [ "${{ github.event.inputs.suite }}" = "regression" ]; then
-            echo "Skipping smoke tests as only regression suite was requested."
-            exit 0 # Exit successfully if user requested only regression
-          fi
-          
-          mvn clean test -Dgroups=smoke -Dbrowser="$BROWSER"
-        shell: bash
-        # Note: If the user selects 'all', this job runs the smoke suite.
-
-  # --- JOB 2: RUN REGRESSION TESTS (ONLY IF SMOKE PASSES) ---
-  regression_test:
-    name: Run Regression Tests on ${{ github.event.inputs.browser }}
-    runs-on: ubuntu-latest
-    env:
-      CI: true
-    # CRITICAL: This job will only start if the 'smoke_test' job succeeded.
-    # It also checks if 'all' or 'regression' was selected in the input.
-    needs: smoke_test
-    if: success() && (github.event.inputs.suite == 'regression' || github.event.inputs.suite == 'all')
+    
+    # CRITICAL: This job only runs if 'smoke' or 'all' is requested. 
+    # If 'regression' is selected, this job is marked as 'skipped'.
+    if: github.event.inputs.suite == 'smoke' || github.event.inputs.suite == 'all'
     
     steps:
       - name: Checkout repository
@@ -82,12 +50,48 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Run Regression Tests
+      - name: Run Smoke Tests 💨
+        run: |
+          BROWSER="${{ github.event.inputs.browser }}"
+          echo "Running smoke tests on $BROWSER"
+          # Maven command runs tests belonging to the 'smoke' TestNG group
+          mvn clean test -Dgroups=smoke -Dbrowser="$BROWSER"
+        shell: bash
+
+  # --- JOB 2: RUN REGRESSION TESTS (CONDITIONAL DEPENDENCY) ---
+  regression_test:
+    name: Run Regression Tests on ${{ github.event.inputs.browser }}
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+    
+    # 1. Dependency: Must wait for the smoke test job to finish.
+    needs: smoke_test
+    
+    # 2. CRITICAL CONDITION: This job runs only IF:
+    #    a) User requested 'regression' or 'all'. (i.e., this job is relevant)
+    #    b) The result of the 'smoke_test' was 'success' OR 'skipped'. (i.e., it didn't fail)
+    if: |
+      (github.event.inputs.suite == 'regression' || github.event.inputs.suite == 'all') && 
+      (needs.smoke_test.result == 'success' || needs.smoke_test.result == 'skipped') && 
+      !cancelled()
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run Regression Tests 🐢
         run: |
           BROWSER="${{ github.event.inputs.browser }}"
           echo "Running regression tests on $BROWSER"
-          
-          # Only run the regression group
+          # Maven command runs tests belonging to the 'regression' TestNG group
           mvn clean test -Dgroups=regression -Dbrowser="$BROWSER"
         shell: bash
         
@@ -95,5 +99,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: regression-report-${{ github.event.inputs.browser }}
-          path: reports/
+          path: target/surefire-reports
           retention-days: 7
