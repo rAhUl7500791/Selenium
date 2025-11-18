@@ -31,7 +31,6 @@ jobs:
   smoke_test:
     name: Run Smoke Tests on ${{ github.event.inputs.browser || 'chrome' }}
     runs-on: ubuntu-latest
-    # Job-level condition using github.event.inputs.suite
     if: ${{ github.event.inputs.suite == 'smoke' || github.event.inputs.suite == 'all' || github.event_name != 'workflow_dispatch' }}
 
     steps:
@@ -53,6 +52,7 @@ jobs:
         shell: bash
 
       - name: Upload Smoke Test Reports
+        if: always()   # <-- ensures reports upload even if tests fail
         uses: actions/upload-artifact@v4
         with:
           name: smoke-report-${{ github.event.inputs.browser || 'chrome' }}
@@ -64,7 +64,6 @@ jobs:
     name: Run Regression Tests on ${{ github.event.inputs.browser || 'chrome' }}
     runs-on: ubuntu-latest
     needs: smoke_test
-    # Job-level condition using github.event.inputs.suite and smoke_test result
     if: ${{ (github.event.inputs.suite == 'regression' || github.event.inputs.suite == 'all' || github.event_name != 'workflow_dispatch') && (needs.smoke_test.result == 'success' || needs.smoke_test.result == 'skipped') }}
 
     steps:
@@ -86,9 +85,9 @@ jobs:
         shell: bash
 
       - name: Upload Regression Test Reports
+        if: always()   # <-- ensures reports upload even if tests fail
         uses: actions/upload-artifact@v4
         with:
           name: regression-report-${{ github.event.inputs.browser || 'chrome' }}
           path: target/surefire-reports
           retention-days: 7
-
