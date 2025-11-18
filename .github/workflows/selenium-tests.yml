@@ -16,11 +16,24 @@ on:
           - smoke
           - regression
           - all
+      browser:
+        description: "Select browser for execution"
+        required: true
+        default: "chrome"
+        type: choice
+        options:
+          - chrome
+          - firefox
+          - edge
+
 jobs:
 
-  smoke:
+  test:
     runs-on: ubuntu-latest
+    env:
+      CI: true    # ensures headless mode in BaseTest
     steps:
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -31,50 +44,34 @@ jobs:
           distribution: 'temurin'
 
       - name: Install Chrome
+        if: ${{ github.event.inputs.browser == 'chrome' }}
         uses: browser-actions/setup-chrome@v1
 
       - name: Install ChromeDriver
+        if: ${{ github.event.inputs.browser == 'chrome' }}
         uses: nanasess/setup-chromedriver@v2
 
-      - name: Run SMOKE Tests
+      - name: Install Firefox
+        if: ${{ github.event.inputs.browser == 'firefox' }}
+        uses: browser-actions/setup-firefox@v1
+
+      - name: Install Edge
+        if: ${{ github.event.inputs.browser == 'edge' }}
+        uses: browser-actions/setup-edge@v1
+
+      - name: Run Tests
         run: |
-          if [ "${{ github.event.inputs.suite }}" = "regression" ]; then
-            echo "Skipping smoke (manual regression selected)"
+          echo "Running ${{ github.event.inputs.suite }} tests on ${{ github.event.inputs.browser }}"
+          if [ "${{ github.event.inputs.suite }}" = "smoke" ]; then
+            mvn clean test -Dgroups=smoke -Dbrowser=${{ github.event.inputs.browser }}
+          elif [ "${{ github.event.inputs.suite }}" = "regression" ]; then
+            mvn clean test -Dgroups=regression -Dbrowser=${{ github.event.inputs.browser }}
           else
-            mvn clean test -Dgroups=smoke -Dchrome.options="--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage"
-          fi
+            mvn clean test -Dbrowser=${{ github.event.inputs.browser }}
+        shell: bash
 
-      - name: Upload Smoke Reports
+      - name: Upload Test Reports
         uses: actions/upload-artifact@v4
         with:
-          name: smoke-report
-          path: reports/
-
-  regression:
-    needs: smoke
-    runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.suite == 'all' || github.event.inputs.suite == 'regression' || github.event_name != 'workflow_dispatch' }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Install Chrome
-        uses: browser-actions/setup-chrome@v1
-
-      - name: Install ChromeDriver
-        uses: nanasess/setup-chromedriver@v2
-
-      - name: Run REGRESSION Tests
-        run: mvn clean test -Dgroups=regression -Dchrome.options="--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage"
-
-      - name: Upload Regression Reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: regression-report
+          name: test-report
           path: reports/
