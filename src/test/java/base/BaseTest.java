@@ -20,77 +20,85 @@ import pageobjects.LoginPage;
 
 public class BaseTest {
 
-    public WebDriver driver;
-    public Properties prop;
+	public WebDriver driver;
+	public Properties prop;
 
-    protected LoginPage loginPage;
+	protected LoginPage loginPage;
 
-    public WebDriver initializeDriver() throws IOException {
+	public WebDriver initializeDriver() throws IOException {
 
-        // 1. Load Properties File
-        prop = new Properties();
-        String configPath = System.getProperty("user.dir") + "/src/main/java/resources/GlobalConfig.properties";
-        FileInputStream fis = new FileInputStream(configPath);
-        prop.load(fis);
+		// 1. Load Properties File
+		prop = new Properties();
+		// NOTE: Path kept as per your input: src/main/java/resources/
+		String configPath = System.getProperty("user.dir") + "/src/main/java/resources/GlobalConfig.properties";
+		FileInputStream fis = new FileInputStream(configPath);
+		prop.load(fis);
 
-        // 2. Get browser and CI flag
-        String browserName = System.getProperty("browser") != null ? System.getProperty("browser") : "chrome";
-        boolean isCI = System.getenv("CI") != null && System.getenv("CI").equals("true");
+		// 2. Get browser and CI flag
+		String browserName = System.getProperty("browser") != null ? System.getProperty("browser") : "chrome";
+		boolean isCI = System.getenv("CI") != null && System.getenv("CI").equals("true");
 
-        // 3. Initialize driver based on browser
-        if (browserName.equalsIgnoreCase("chrome")) {
-            WebDriverManager.chromedriver().setup();
-            ChromeOptions options = new ChromeOptions();
-            if (isCI) {
-                options.addArguments("--headless=new");
-                options.addArguments("--no-sandbox");
-                options.addArguments("--disable-gpu");
-                options.addArguments("--disable-dev-shm-usage");
-            }
-            driver = new ChromeDriver(options);
+		// 3. Initialize driver based on browser
+		if (browserName.equalsIgnoreCase("chrome")) {
+			WebDriverManager.chromedriver().setup();
+			ChromeOptions options = new ChromeOptions();
+			if (isCI) {
+				options.addArguments("--headless=new");
+				options.addArguments("--no-sandbox");
+				options.addArguments("--disable-gpu");
+				options.addArguments("--disable-dev-shm-usage");
+			}
+			driver = new ChromeDriver(options);
 
-        } else if (browserName.equalsIgnoreCase("firefox")) {
-            WebDriverManager.firefoxdriver().setup();
-            FirefoxOptions options = new FirefoxOptions();
-            if (isCI) {
-                options.addArguments("--headless");
-            }
-            driver = new FirefoxDriver(options);
+		} else if (browserName.equalsIgnoreCase("firefox")) {
+			WebDriverManager.firefoxdriver().setup();
+			FirefoxOptions options = new FirefoxOptions();
+			if (isCI) {
+				options.addArguments("--headless");
+			}
+			driver = new FirefoxDriver(options);
 
-        } else if (browserName.equalsIgnoreCase("edge")) {
-            WebDriverManager.edgedriver().setup();
-            EdgeOptions options = new EdgeOptions();
-            if (isCI) {
-                options.addArguments("--headless=new");
-            }
-            driver = new EdgeDriver(options);
+		} else if (browserName.equalsIgnoreCase("edge")) {
+			WebDriverManager.edgedriver().setup();
+			EdgeOptions options = new EdgeOptions();
+			if (isCI) {
+				options.addArguments("--headless=new");
+			}
+			driver = new EdgeDriver(options);
+            
+		} else {
+            // CRITICAL FIX: Throw an error if the browser name is invalid/missing
+            // This prevents the NullPointerException later on.
+            throw new IllegalArgumentException("Unsupported browser specified: '" + browserName + 
+                "'. Please choose 'chrome', 'firefox', or 'edge'.");
         }
 
-        // 4. Global Driver Settings
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
-        driver.manage().window().maximize();
+		// 4. Global Driver Settings
+        // This is safe now because we either initialized the driver or threw an exception.
+		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+		driver.manage().window().maximize();
 
-        return driver;
-    }
+		return driver;
+	}
 
-    @BeforeMethod(alwaysRun = true)
-    public void launchApplication() throws IOException {
-        driver = initializeDriver();
+	@BeforeMethod(alwaysRun = true)
+	public void launchApplication() throws IOException {
+		driver = initializeDriver();
 
-        // Get environment URL (default to stage)
-        String envName = System.getProperty("env") != null ? System.getProperty("env") : "stage";
-        String url = prop.getProperty(envName + "Url");
+		// Get environment URL (default to stage)
+		String envName = System.getProperty("env") != null ? System.getProperty("env") : "stage";
+		String url = prop.getProperty(envName + "Url");
 
-        driver.get(url);
+		driver.get(url);
 
-        // Save for test usage
-        loginPage = new LoginPage(driver);
-    }
+		// Save for test usage
+		loginPage = new LoginPage(driver);
+	}
 
-    @AfterMethod(alwaysRun = true)
-    public void tearDown() {
-        if (driver != null) {
-            driver.quit();
-        }
-    }
+	@AfterMethod(alwaysRun = true)
+	public void tearDown() {
+		if (driver != null) {
+			driver.quit();
+		}
+	}
 }
