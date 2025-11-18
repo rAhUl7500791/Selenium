@@ -61,13 +61,17 @@ jobs:
 
       - name: Run Tests
         run: |
-          echo "Running ${{ github.event.inputs.suite }} tests on ${{ github.event.inputs.browser }}"
-          if [ "${{ github.event.inputs.suite }}" = "smoke" ]; then
-            mvn clean test -Dgroups=smoke -Dbrowser=${{ github.event.inputs.browser }}
-          elif [ "${{ github.event.inputs.suite }}" = "regression" ]; then
-            mvn clean test -Dgroups=regression -Dbrowser=${{ github.event.inputs.browser }}
+          SUITE="${{ github.event.inputs.suite }}"
+          BROWSER="${{ github.event.inputs.browser }}"
+
+          echo "Running $SUITE tests on $BROWSER"
+
+          if [ "$SUITE" = "smoke" ]; then
+            mvn clean test -Dgroups=smoke -Dbrowser="$BROWSER"
+          elif [ "$SUITE" = "regression" ]; then
+            mvn clean test -Dgroups=regression -Dbrowser="$BROWSER"
           else
-            mvn clean test -Dbrowser=${{ github.event.inputs.browser }}
+            mvn clean test -Dbrowser="$BROWSER"
         shell: bash
 
       - name: Upload Test Reports
