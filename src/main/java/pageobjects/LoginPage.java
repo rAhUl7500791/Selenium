@@ -5,8 +5,11 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 
+import utils.SeleniumUtils;
+
 public class LoginPage {
 	WebDriver driver;
+	SeleniumUtils utils;
 	@FindBy(id = "userEmail")
     private WebElement userEmailField;
 
@@ -29,7 +32,9 @@ public class LoginPage {
      * Returns the ProductCataloguePage object upon successful login.
      */
     public ProductCataloguePage loginApplication(String email, String password) {
+    	utils.waitForElementVisible(userEmailField);
         userEmailField.sendKeys(email);
+        utils.waitForElementVisible(userPasswordField);
         userPasswordField.sendKeys(password);
         loginButton.click();
         return new ProductCataloguePage(driver);

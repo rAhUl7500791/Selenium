@@ -27,7 +27,10 @@ public class SeleniumUtils {
     public void waitForElementClickable(By locator) {
         wait.until(ExpectedConditions.elementToBeClickable(locator));
     }
-
+    
+    public void waitForElementVisible(WebElement element) {
+        wait.until(ExpectedConditions.visibilityOf(element));
+    }
     // Wait for clickable (WebElement version)
     public void waitForElementClickable(WebElement element) {
         wait.until(ExpectedConditions.elementToBeClickable(element));
