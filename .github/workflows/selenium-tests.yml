@@ -72,6 +72,7 @@ jobs:
             mvn clean test -Dgroups=regression -Dbrowser="$BROWSER"
           else
             mvn clean test -Dbrowser="$BROWSER"
+          fi
         shell: bash
 
       - name: Upload Test Reports
