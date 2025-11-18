@@ -42,7 +42,7 @@ public class BaseTest {
 		String browserProperty = System.getProperty("browser");
 		String browserName;
 		
-		// FIX: Check if property is null OR empty/blank string, and default to "chrome"
+		// Check if property is null OR empty/blank string, and default to "chrome"
 		if (browserProperty == null || browserProperty.trim().isEmpty()) {
 		    browserName = "chrome";
 		} else {
@@ -81,7 +81,7 @@ public class BaseTest {
 			driver = new EdgeDriver(options);
             
 		} else {
-            // CRITICAL: Throw an exception for unsupported/unrecognized browser names
+            // Throw an exception for unsupported/unrecognized browser names
             throw new IllegalArgumentException("Unsupported browser specified: '" + browserName + 
                 "'. Please choose 'chrome', 'firefox', or 'edge'.");
         }
@@ -103,8 +103,16 @@ public class BaseTest {
 
 		// Get environment URL (default to stage)
 		String envName = System.getProperty("env") != null ? System.getProperty("env") : "stage";
-		String url = prop.getProperty(envName + "Url");
+		String propertyKey = envName + "Url";
+		String url = prop.getProperty(propertyKey);
 
+        // CRITICAL FIX: Check for null URL before navigating
+        if (url == null) {
+            throw new RuntimeException("Application URL not found in GlobalConfig.properties. " + 
+                "The key being searched for is: '" + propertyKey + "'. Please ensure this key exists and has a value.");
+        }
+        
+		// Line 108: Navigation to the URL
 		driver.get(url);
 
 		// Instantiate the LoginPage object
