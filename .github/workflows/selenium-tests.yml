@@ -31,11 +31,8 @@ jobs:
   smoke_test:
     name: Run Smoke Tests on ${{ github.event.inputs.browser || 'chrome' }}
     runs-on: ubuntu-latest
-    env:
-      CI: true
-      SUITE: ${{ github.event.inputs.suite || 'all' }}
-      BROWSER: ${{ github.event.inputs.browser || 'chrome' }}
-    if: ${{ env.SUITE == 'smoke' || env.SUITE == 'all' }}
+    # Job-level condition using github.event.inputs.suite
+    if: ${{ github.event.inputs.suite == 'smoke' || github.event.inputs.suite == 'all' || github.event_name != 'workflow_dispatch' }}
 
     steps:
       - name: Checkout repository
@@ -50,6 +47,7 @@ jobs:
 
       - name: Run Smoke Tests 💨
         run: |
+          BROWSER="${{ github.event.inputs.browser || 'chrome' }}"
           echo "Running smoke tests on $BROWSER"
           mvn clean test -Dgroups=smoke -Dbrowser="$BROWSER"
         shell: bash
@@ -57,7 +55,7 @@ jobs:
       - name: Upload Smoke Test Reports
         uses: actions/upload-artifact@v4
         with:
-          name: smoke-report-$BROWSER
+          name: smoke-report-${{ github.event.inputs.browser || 'chrome' }}
           path: target/surefire-reports
           retention-days: 7
 
@@ -66,10 +64,8 @@ jobs:
     name: Run Regression Tests on ${{ github.event.inputs.browser || 'chrome' }}
     runs-on: ubuntu-latest
     needs: smoke_test
-    env:
-      SUITE: ${{ github.event.inputs.suite || 'all' }}
-      BROWSER: ${{ github.event.inputs.browser || 'chrome' }}
-    if: ${{ (env.SUITE == 'regression' || env.SUITE == 'all') && (needs.smoke_test.result == 'success' || needs.smoke_test.result == 'skipped') }}
+    # Job-level condition using github.event.inputs.suite and smoke_test result
+    if: ${{ (github.event.inputs.suite == 'regression' || github.event.inputs.suite == 'all' || github.event_name != 'workflow_dispatch') && (needs.smoke_test.result == 'success' || needs.smoke_test.result == 'skipped') }}
 
     steps:
       - name: Checkout repository
@@ -84,6 +80,7 @@ jobs:
 
       - name: Run Regression Tests 🐢
         run: |
+          BROWSER="${{ github.event.inputs.browser || 'chrome' }}"
           echo "Running regression tests on $BROWSER"
           mvn clean test -Dgroups=regression -Dbrowser="$BROWSER"
         shell: bash
@@ -91,6 +88,7 @@ jobs:
       - name: Upload Regression Test Reports
         uses: actions/upload-artifact@v4
         with:
-          name: regression-report-$BROWSER
+          name: regression-report-${{ github.event.inputs.browser || 'chrome' }}
           path: target/surefire-reports
           retention-days: 7
+
