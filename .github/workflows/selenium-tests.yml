@@ -27,17 +27,27 @@ on:
           - edge
 
 jobs:
+  # Define variables that are always available, falling back to defaults for push/PR events
+  # This makes the job 'if' conditions work universally.
+  set_vars:
+    runs-on: ubuntu-latest
+    outputs:
+      suite: ${{ github.event.inputs.suite || 'all' }}
+      browser: ${{ github.event.inputs.browser || 'chrome' }}
+    steps:
+      - run: echo "Running suite: ${{ github.event.inputs.suite || 'all' }}"
+      - run: echo "Running browser: ${{ github.event.inputs.browser || 'chrome' }}"
 
   # --- JOB 1: RUN SMOKE TESTS ---
   smoke_test:
-    name: Run Smoke Tests on ${{ github.event.inputs.browser }}
+    name: Run Smoke Tests on ${{ needs.set_vars.outputs.browser }}
     runs-on: ubuntu-latest
+    needs: set_vars # Get the computed variables
     env:
       CI: true
     
-    # CRITICAL: This job only runs if 'smoke' or 'all' is requested. 
-    # If 'regression' is selected, this job is marked as 'skipped'.
-    if: github.event.inputs.suite == 'smoke' || github.event.inputs.suite == 'all'
+    # Use the computed output variable from set_vars
+    if: needs.set_vars.outputs.suite == 'smoke' || needs.set_vars.outputs.suite == 'all'
     
     steps:
       - name: Checkout repository
@@ -52,27 +62,27 @@ jobs:
 
       - name: Run Smoke Tests 💨
         run: |
-          BROWSER="${{ github.event.inputs.browser }}"
+          BROWSER="${{ needs.set_vars.outputs.browser }}"
           echo "Running smoke tests on $BROWSER"
-          # Maven command runs tests belonging to the 'smoke' TestNG group
           mvn clean test -Dgroups=smoke -Dbrowser="$BROWSER"
         shell: bash
 
   # --- JOB 2: RUN REGRESSION TESTS (CONDITIONAL DEPENDENCY) ---
   regression_test:
-    name: Run Regression Tests on ${{ github.event.inputs.browser }}
+    name: Run Regression Tests on ${{ needs.set_vars.outputs.browser }}
     runs-on: ubuntu-latest
+    needs: [smoke_test, set_vars] # Depend on both the result and the variables
     env:
       CI: true
     
-    # 1. Dependency: Must wait for the smoke test job to finish.
-    needs: smoke_test
-    
-    # 2. CRITICAL CONDITION: This job runs only IF:
-    #    a) User requested 'regression' or 'all'. (i.e., this job is relevant)
-    #    b) The result of the 'smoke_test' was 'success' OR 'skipped'. (i.e., it didn't fail)
+    # Get computed suite from set_vars job:
+    ${{ vars.suite := needs.set_vars.outputs.suite }} 
+
+    # CRITICAL CONDITION: This job runs only IF:
+    # a) Regression was requested ('regression' or 'all').
+    # b) The result of the 'smoke_test' was 'success' OR 'skipped'. (It didn't fail)
     if: |
-      (github.event.inputs.suite == 'regression' || github.event.inputs.suite == 'all') && 
+      (vars.suite == 'regression' || vars.suite == 'all') && 
       (needs.smoke_test.result == 'success' || needs.smoke_test.result == 'skipped') && 
       !cancelled()
 
@@ -89,15 +99,14 @@ jobs:
 
       - name: Run Regression Tests 🐢
         run: |
-          BROWSER="${{ github.event.inputs.browser }}"
+          BROWSER="${{ needs.set_vars.outputs.browser }}"
           echo "Running regression tests on $BROWSER"
-          # Maven command runs tests belonging to the 'regression' TestNG group
           mvn clean test -Dgroups=regression -Dbrowser="$BROWSER"
         shell: bash
         
       - name: Upload Test Reports
         uses: actions/upload-artifact@v4
         with:
-          name: regression-report-${{ github.event.inputs.browser }}
+          name: regression-report-${{ needs.set_vars.outputs.browser }}
           path: target/surefire-reports
           retention-days: 7
