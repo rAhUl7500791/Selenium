@@ -22,11 +22,11 @@ public class SmokeTest extends BaseTest {
         // We assume BaseTest's launchApplication sets the protected 'loginPage' field.
         ProductCataloguePage productCatalogue = loginPage.loginApplication("rahul@test1.com", "Test@123");
         
-        // 2. Assert successful navigation
-        Assert.assertNotNull(productCatalogue, "Login failed; Product Catalogue Page object is null.");
+        // // 2. Assert successful navigation
+         Assert.assertNotNull(productCatalogue, "Login failed; Product Catalogue Page object is null.");
         
-        // 3. Verify the "Checkout" button is present and displayed (Smoke Check)
-        boolean isCheckoutPresent = productCatalogue.isCheckoutButtonPresent();
-        Assert.assertTrue(isCheckoutPresent, "Checkout button is not present on the dashboard.");
+        // // 3. Verify the "Checkout" button is present and displayed (Smoke Check)
+         boolean isCheckoutPresent = productCatalogue.isCheckoutButtonPresent();
+         Assert.assertTrue(isCheckoutPresent, "Checkout button is not present on the dashboard.");
     }
 }
