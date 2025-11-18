@@ -37,6 +37,7 @@ public class LoginPage {
         userEmailField.sendKeys(email);
         utils.waitForElementVisible(userPasswordField);
         userPasswordField.sendKeys(password);
+        utils.waitForElementClickable(loginButton);
         loginButton.click();
         return new ProductCataloguePage(driver);
     }

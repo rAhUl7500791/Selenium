@@ -2,23 +2,23 @@
 <testng-results ignored="0" total="1" passed="1" failed="0" skipped="0">
   <reporter-output>
   </reporter-output>
-  <suite started-at="2025-11-18T19:53:38 IST" name="Default suite" finished-at="2025-11-18T19:53:42 IST" duration-ms="4875">
+  <suite started-at="2025-11-18T20:19:02 IST" name="Default suite" finished-at="2025-11-18T20:19:05 IST" duration-ms="2767">
     <groups>
       <group name="smoke">
         <method signature="SmokeTest.successfulLoginAndCheckoutButtonCheck()[pri:0, instance:tests.SmokeTest@327514f]" name="successfulLoginAndCheckoutButtonCheck" class="tests.SmokeTest"/>
       </group> <!-- smoke -->
     </groups>
-    <test started-at="2025-11-18T19:53:38 IST" name="Default test" finished-at="2025-11-18T19:53:42 IST" duration-ms="4875">
+    <test started-at="2025-11-18T20:19:02 IST" name="Default test" finished-at="2025-11-18T20:19:05 IST" duration-ms="2767">
       <class name="tests.SmokeTest">
-        <test-method is-config="true" signature="launchApplication()[pri:0, instance:tests.SmokeTest@327514f]" started-at="2025-11-18T19:53:38 IST" name="launchApplication" finished-at="2025-11-18T19:53:41 IST" duration-ms="3726" status="PASS">
+        <test-method is-config="true" signature="launchApplication()[pri:0, instance:tests.SmokeTest@327514f]" started-at="2025-11-18T20:19:02 IST" name="launchApplication" finished-at="2025-11-18T20:19:04 IST" duration-ms="2058" status="PASS">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- launchApplication -->
-        <test-method signature="successfulLoginAndCheckoutButtonCheck()[pri:0, instance:tests.SmokeTest@327514f]" started-at="2025-11-18T19:53:41 IST" name="successfulLoginAndCheckoutButtonCheck" description="Valid Login and Checkout Button Check" finished-at="2025-11-18T19:53:42 IST" duration-ms="832" status="PASS">
+        <test-method signature="successfulLoginAndCheckoutButtonCheck()[pri:0, instance:tests.SmokeTest@327514f]" started-at="2025-11-18T20:19:04 IST" name="successfulLoginAndCheckoutButtonCheck" description="Valid Login and Checkout Button Check" finished-at="2025-11-18T20:19:05 IST" duration-ms="492" status="PASS">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- successfulLoginAndCheckoutButtonCheck -->
-        <test-method is-config="true" signature="tearDown()[pri:0, instance:tests.SmokeTest@327514f]" started-at="2025-11-18T19:53:42 IST" name="tearDown" finished-at="2025-11-18T19:53:42 IST" duration-ms="273" status="PASS">
+        <test-method is-config="true" signature="tearDown()[pri:0, instance:tests.SmokeTest@327514f]" started-at="2025-11-18T20:19:05 IST" name="tearDown" finished-at="2025-11-18T20:19:05 IST" duration-ms="191" status="PASS">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- tearDown -->
