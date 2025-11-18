@@ -31,7 +31,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      CI: true    # ensures headless mode in BaseTest
+      CI: true      # Triggers headless mode in BaseTest.java
+      # MAVEN_OPTS: -Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true # Uncomment if connection issues persist
     steps:
 
       - name: Checkout repository
@@ -42,23 +43,11 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: 'maven'
 
-      - name: Install Chrome
-        if: ${{ github.event.inputs.browser == 'chrome' }}
-        uses: browser-actions/setup-chrome@v1
-
-      - name: Install ChromeDriver
-        if: ${{ github.event.inputs.browser == 'chrome' }}
-        uses: nanasess/setup-chromedriver@v2
-
-      - name: Install Firefox
-        if: ${{ github.event.inputs.browser == 'firefox' }}
-        uses: browser-actions/setup-firefox@v1
-
-      - name: Install Edge
-        if: ${{ github.event.inputs.browser == 'edge' }}
-        uses: browser-actions/setup-edge@v1
-
+      # --- REMOVED BROWSER/DRIVER INSTALLATION ACTIONS ---
+      # WebDriverManager handles this, and the browsers (Chrome/Firefox) are pre-installed on the runners.
+      
       - name: Run Tests
         run: |
           SUITE="${{ github.event.inputs.suite }}"
@@ -66,11 +55,13 @@ jobs:
 
           echo "Running $SUITE tests on $BROWSER"
 
+          # Use the -Dgroups flag for TestNG filtering
           if [ "$SUITE" = "smoke" ]; then
             mvn clean test -Dgroups=smoke -Dbrowser="$BROWSER"
           elif [ "$SUITE" = "regression" ]; then
             mvn clean test -Dgroups=regression -Dbrowser="$BROWSER"
           else
+            # Run everything if 'all' is selected (no -Dgroups needed)
             mvn clean test -Dbrowser="$BROWSER"
           fi
         shell: bash
@@ -78,5 +69,6 @@ jobs:
       - name: Upload Test Reports
         uses: actions/upload-artifact@v4
         with:
-          name: test-report
+          name: test-report-${{ github.event.inputs.suite }}-${{ github.event.inputs.browser }}
           path: reports/
+          retention-days: 7
