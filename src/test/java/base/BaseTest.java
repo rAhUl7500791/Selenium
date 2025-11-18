@@ -25,6 +25,10 @@ public class BaseTest {
 
 	protected LoginPage loginPage;
 
+	/**
+	 * Initializes the WebDriver based on system properties and loads global config.
+	 * Configures browsers for headless execution if running in CI environment.
+	 */
 	public WebDriver initializeDriver() throws IOException {
 
 		// 1. Load Properties File
@@ -35,7 +39,17 @@ public class BaseTest {
 		prop.load(fis);
 
 		// 2. Get browser and CI flag
-		String browserName = System.getProperty("browser") != null ? System.getProperty("browser") : "chrome";
+		String browserProperty = System.getProperty("browser");
+		String browserName;
+		
+		// FIX: Check if property is null OR empty/blank string, and default to "chrome"
+		if (browserProperty == null || browserProperty.trim().isEmpty()) {
+		    browserName = "chrome";
+		} else {
+		    browserName = browserProperty;
+		}
+
+		// Check for CI environment variable to enable headless mode
 		boolean isCI = System.getenv("CI") != null && System.getenv("CI").equals("true");
 
 		// 3. Initialize driver based on browser
@@ -67,20 +81,22 @@ public class BaseTest {
 			driver = new EdgeDriver(options);
             
 		} else {
-            // CRITICAL FIX: Throw an error if the browser name is invalid/missing
-            // This prevents the NullPointerException later on.
+            // CRITICAL: Throw an exception for unsupported/unrecognized browser names
             throw new IllegalArgumentException("Unsupported browser specified: '" + browserName + 
                 "'. Please choose 'chrome', 'firefox', or 'edge'.");
         }
 
 		// 4. Global Driver Settings
-        // This is safe now because we either initialized the driver or threw an exception.
 		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
 		driver.manage().window().maximize();
 
 		return driver;
 	}
 
+	/**
+	 * Runs before every @Test: Initializes driver, navigates to the URL, and
+	 * instantiates the starting page object.
+	 */
 	@BeforeMethod(alwaysRun = true)
 	public void launchApplication() throws IOException {
 		driver = initializeDriver();
@@ -91,10 +107,13 @@ public class BaseTest {
 
 		driver.get(url);
 
-		// Save for test usage
+		// Instantiate the LoginPage object
 		loginPage = new LoginPage(driver);
 	}
 
+	/**
+	 * Runs after every @Test: Closes the browser instance.
+	 */
 	@AfterMethod(alwaysRun = true)
 	public void tearDown() {
 		if (driver != null) {
