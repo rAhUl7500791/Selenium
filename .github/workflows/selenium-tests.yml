@@ -51,12 +51,19 @@ jobs:
           mvn clean test -Dgroups=smoke -Dbrowser="$BROWSER"
         shell: bash
 
-      - name: Upload Smoke Test Reports
-        if: always()   # <-- ensures reports upload even if tests fail
+      - name: Generate Allure Report for Smoke
+        if: always()
+        uses: simple-elf/allure-report-action@master
+        with:
+          allure_results: target/allure-results
+          allure_report: target/allure-report-smoke
+
+      - name: Upload Smoke Allure HTML Report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: smoke-report-${{ github.event.inputs.browser || 'chrome' }}
-          path: target/surefire-reports
+          name: smoke-allure-report-${{ github.event.inputs.browser || 'chrome' }}
+          path: target/allure-report-smoke
           retention-days: 7
 
   # --- JOB 2: REGRESSION TEST ---
@@ -84,10 +91,17 @@ jobs:
           mvn clean test -Dgroups=regression -Dbrowser="$BROWSER"
         shell: bash
 
-      - name: Upload Regression Test Reports
-        if: always()   # <-- ensures reports upload even if tests fail
+      - name: Generate Allure Report for Regression
+        if: always()
+        uses: simple-elf/allure-report-action@master
+        with:
+          allure_results: target/allure-results
+          allure_report: target/allure-report-regression
+
+      - name: Upload Regression Allure HTML Report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: regression-report-${{ github.event.inputs.browser || 'chrome' }}
-          path: target/surefire-reports
+          name: regression-allure-report-${{ github.event.inputs.browser || 'chrome' }}
+          path: target/allure-report-regression
           retention-days: 7
