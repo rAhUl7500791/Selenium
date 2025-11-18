@@ -1,24 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite thread-count="2" parallel="tests" name="Failed suite [E2E Automation Framework]">
-  <listeners>
-    <listener class-name="listeners.TestListener"/>
-    <listener class-name="listeners.RetryTransformer"/>
-  </listeners>
-  <test thread-count="2" parallel="tests" name="Regression Suite(failed)">
-    <groups>
-      <run>
-        <include name="regression"/>
-      </run>
-    </groups>
+<suite name="Failed suite [Default suite]" guice-stage="DEVELOPMENT">
+  <test thread-count="5" name="Default test(failed)">
     <classes>
-      <class name="tests.RegressionTest">
+      <class name="tests.SmokeTest">
         <methods>
           <include name="tearDown"/>
-          <include name="e2ePurchaseAndHistoryValidation" invocation-numbers="0"/>
           <include name="launchApplication"/>
+          <include name="successfulLoginAndCheckoutButtonCheck"/>
         </methods>
-      </class> <!-- tests.RegressionTest -->
+      </class> <!-- tests.SmokeTest -->
     </classes>
-  </test> <!-- Regression Suite(failed) -->
-</suite> <!-- Failed suite [E2E Automation Framework] -->
+  </test> <!-- Default test(failed) -->
+</suite> <!-- Failed suite [Default suite] -->
