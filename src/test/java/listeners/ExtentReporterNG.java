@@ -9,8 +9,8 @@ public class ExtentReporterNG {
 
     public static ExtentReports getReporterObject() {
 
-        String path = System.getProperty("user.dir") + "/reports/index.html";
-        ExtentSparkReporter reporter = new ExtentSparkReporter(path);
+//        String path = System.getProperty("user.dir") + "/reports/index.html";
+        ExtentSparkReporter reporter = new ExtentSparkReporter("target/extent-report.html");
 
         // ---------- Report UI Settings ----------
         reporter.config().setTheme(Theme.DARK);                       // BEAUTIFUL DARK THEME
