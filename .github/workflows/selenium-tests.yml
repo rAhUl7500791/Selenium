@@ -53,9 +53,10 @@ jobs:
 
       - name: Generate Allure Report for Smoke
         if: always()
-        run: |
-          allure generate target/allure-results --clean -o target/allure-report-smoke
-        shell: bash
+        uses: qa-research/allure-report-action@v2
+        with:
+          results: target/allure-results
+          report: target/allure-report-smoke
 
       - name: Upload Smoke Allure HTML Report
         if: always()
@@ -92,9 +93,10 @@ jobs:
 
       - name: Generate Allure Report for Regression
         if: always()
-        run: |
-          allure generate target/allure-results --clean -o target/allure-report-regression
-        shell: bash
+        uses: qa-research/allure-report-action@v2
+        with:
+          results: target/allure-results
+          report: target/allure-report-regression
 
       - name: Upload Regression Allure HTML Report
         if: always()
