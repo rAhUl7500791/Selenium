@@ -37,7 +37,7 @@
             <groupId>io.github.bonigarcia</groupId>
             <artifactId>webdrivermanager</artifactId>
             <version>5.8.0</version>
-        </dependency>
+        </dependency> 
 
         <!-- 3. Reporting (ExtentReports) -->
         <dependency>
