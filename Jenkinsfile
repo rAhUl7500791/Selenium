@@ -12,7 +12,7 @@ pipeline {
             steps {
                 bat 'mvn clean test -Dgroups=smoke'
             }
-        }
+        } 
 
         stage('Regression Tests') {
             steps {
