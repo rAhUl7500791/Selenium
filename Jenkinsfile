@@ -2,55 +2,32 @@ pipeline {
     agent any
 
     triggers {
-        // GitHub auto trigger
-        githubPush()
-
-        // Daily schedule — 9PM IST (3:30 PM UTC)
-        cron('30 15 * * *') 
+        cron('0 21 * * *')     // Runs every night 9 PM
+        githubPush()           // Runs on every push
     }
 
     stages {
-        stage('Checkout') {
+
+        stage('Smoke Tests') {
             steps {
-                checkout scm
+                sh 'mvn clean test -Dgroups=smoke'
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Regression Tests') {
             steps {
-                sh "mvn -version"
-                sh "mvn clean install -DskipTests"
+                sh 'mvn test -Dgroups=regression'
             }
         }
 
-        stage('Run Smoke Suite') {
+        stage('Report') {
             steps {
-                echo "Running Smoke Tests"
-                sh "mvn test -DsuiteXmlFile=testng.xml -Dgroups=smoke"
+                publishHTML([
+                    reportDir: 'target/surefire-reports',
+                    reportFiles: 'index.html',
+                    reportName: 'TestNG Report'
+                ])
             }
-            post {
-                always {
-                    junit 'target/surefire-reports/*.xml'
-                }
-            }
-        }
-
-        stage('Run Regression Suite') {
-            steps {
-                echo 'Running Regression Tests'
-                sh "mvn test -DsuiteXmlFile=testng.xml -Dgroups=regression"
-            }
-            post {
-                always {
-                    junit 'target/surefire-reports/*.xml'
-                }
-            }
-        }
-    }
-
-    post {
-        always {
-            archiveArtifacts artifacts: 'target/**', fingerprint: true
         }
     }
 }
