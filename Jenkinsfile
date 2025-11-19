@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     triggers {
-        cron('0 21 * * *')    // 9 PM daily
-        githubPush()          // on every push
+        cron('0 21 * * *')        // daily 9 PM
+        githubPush()              // on every push
     }
 
     stages {
@@ -12,7 +12,7 @@ pipeline {
             steps {
                 bat 'mvn clean test -Dgroups=smoke'
             }
-        } 
+        }
 
         stage('Regression Tests') {
             steps {
@@ -20,13 +20,21 @@ pipeline {
             }
         }
 
-        stage('Report') {
+        stage('Publish Test Reports') {
             steps {
+
+                // JUnit XML reports (for Jenkins pie chart)
+                junit 'target/surefire-reports/*.xml'
+
+                // Publish TestNG HTML Report
                 publishHTML([
-                    reportDir: 'target/surefire-reports',
+                    reportDir: 'test-output',
                     reportFiles: 'index.html',
                     reportName: 'TestNG Report'
                 ])
+
+                // Extent Report (optional)
+                archiveArtifacts artifacts: 'reports/**', followSymlinks: false
             }
         }
     }
