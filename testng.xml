@@ -1,25 +1,30 @@
-<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="Suite">
+<?xml version="1.0" encoding="UTF-8"?>
+<suite name="E2E Automation Framework" parallel="tests" thread-count="2">
 
-    <test name="Smoke Tests">
+    <listeners>
+        <listener class-name="listeners.TestListener"/>
+        <listener class-name="listeners.RetryTransformer"/>
+    </listeners>
+
+    <test name="Smoke Suite">
         <groups>
             <run>
                 <include name="smoke"/>
             </run>
         </groups>
         <classes>
-            <class name="your.package.TestClass1"/>
+            <class name="tests.SmokeTest"/>
         </classes>
     </test>
 
-    <test name="Regression Tests">
+    <test name="Regression Suite">
         <groups>
             <run>
                 <include name="regression"/>
             </run>
         </groups>
         <classes>
-            <class name="your.package.TestClass1"/>
+            <class name="tests.RegressionTest"/>
         </classes>
     </test>
 
